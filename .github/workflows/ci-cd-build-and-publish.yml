@@ -1,0 +1,44 @@
+name: CI/CD Pipeline
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          # AQUI ESTÁ EL TRUCO: code-moises en minúsculas
+          tags: |
+            ghcr.io/code-moises/mi-web:latest
+            ghcr.io/code-moises/mi-web:${{ github.sha }}
+
+      - name: Update HTML
+        run: |
+          FECHA=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          INFO="<p>Build: $FECHA - SHA: ${{ github.sha }}</p>"
+          # Inyectar en el HTML
+          sed -i "s||$INFO|" index.html
+
+      - name: Commit Change
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "ci: update build info [skip ci]"
+          file_pattern: index.html
