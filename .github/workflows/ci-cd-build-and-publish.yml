@@ -35,7 +35,7 @@ jobs:
           FECHA=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           INFO="<p>Build: $FECHA - SHA: ${{ github.sha }}</p>"
           # Inyectar en el HTML
-          sed -i "s||$INFO|" index.html
+          sed -i "s|</body>|$INFO</body>|" index.html
 
       - name: Commit Change
         uses: stefanzweifel/git-auto-commit-action@v4
